@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Scrollama: Sticky Overlay Example</title>
+    <meta name="description" content="Scrollama: Sticky Overlay Example" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 200%;
+      }
+      #scrollytelling-container {
+        position: relative;
+        width: 100%;
+        padding: 1rem;
+      }
+
+      article {
+        position: relative;
+        padding: 0;
+        max-width: 20rem;
+        margin: 0 auto;
+      }
+
+      .sticky-image {
+        position: -webkit-sticky;
+        position: sticky;
+        left: 0;
+        width: 100%;
+        margin: 0;
+        z-index: 0;
+        top: 0;
+        height: 100vh;
+        /* Center everything inside */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        transition: transform 2s ease;
+        object-fit: contain;
+        object-position: top;
+        overflow: hidden; /* hides the parts of the image that are outside the container when we pan an zoom */
+
+      }
+      .circle {
+        position: sticky;
+        top: 50%; /* Center vertically */
+        left: 50%; /* Center horizontally */
+        transform: translate(-50%, -50%); /* Center the center of the cirle, not the top left corner */
+        width: 270px; /* Adjust size as needed */
+        height: 270px; /* Adjust size as needed */
+        border: 3px solid darkgreen; /* Adjust color as needed */
+        border-radius: 50%; /* Make it a circle */
+        z-index: 10;
+        display: none; /* Hide it by default */
+      }
+
+      .step {
+        padding: 0 auto 2rem auto;
+        color: #3b3b3b;
+        height: 100vh;
+        opacity: 0.9;
+      }
+
+      .step:last-child {
+        margin-bottom: 0;
+      }
+
+      .step.is-active p {
+        background-color: whitesmoke;
+        color: #3b3b3b;
+      }
+
+      .step p {
+        text-align: center;
+        padding: 1rem;
+        font-size: 1.5rem;
+        background-color: whitesmoke;
+      }
+
+      .caveats {
+        padding: 1rem;
+        background-color: #f8f8f8;
+        color: #3b3b3b;
+        margin: 40px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <section id="intro">
+        <h1 class="intro__hed">Sticky Overlay Example</h1>
+        <p class="intro__dek">Start scrolling to see how it works.</p>
+      </section>
+
+      <section id="scrollytelling-container">
+           <!-- some steps have a circle when zoomed in -->
+          <div class="circle"></div>
+          <img class="sticky-image" src="images/Suburban Neighborhoods.jpg"></img>
+
+        <article>
+          <div class="step" data-step="1">
+            <p>This is funny.</p>
+          </div>
+          <div
+            class="step"
+            data-step="2"
+
+          >
+            <p>Let's break it down to understand why it is funny.</p>
+          </div>
+          <div
+            class="step"
+            data-step="3"
+            data-zoom-factor="2.5"
+            data-zoom-x-pct="15.5"
+            data-zoom-y-pct="5.6"
+          >
+            <p>See, this is where you live, more or less (minus programming errors)</p>
+          </div>
+          <div class="step" data-step="4" 
+            data-zoom-factor="1.2"
+            data-zoom-x-pct="15.5"
+            data-zoom-y-pct="5.6"
+          >
+            <p>And these are loud and inconsiderate people around you</p>
+          </div>
+          <div class="step" data-step="4" 
+            data-zoom-factor="2.0"
+            data-zoom-x-pct="-25.5"
+            data-zoom-y-pct="-8.6"
+          >
+            <p>Here's an area with quiet neighbors</p>
+          </div>
+          <div class="step" data-step="4" 
+            data-zoom-factor="1.2"
+            data-zoom-x-pct="-25.5"
+            data-zoom-y-pct="-8.6"
+          >
+            <p>You don't live anywhere near there</p>
+          </div>
+          <div class="step" data-step="5" data-zoom-factor="1">
+            <p>And that is why this is funny</p>
+          </div>
+        </article>
+      </section>
+      <div class="caveats">
+        <p>Issues with this example:
+          <ul>
+            <li>The pan and zoom aren't working for different size screens </li>
+            <li>Even if they were, I haven't figured out a general solution for 
+               a user know which values to enter to pan and zoom correctly on 
+            any arbitrary image.</li>
+            <li>Same goes for the circle when zoomed in -- it's currently at the center of the viewport,
+              but the zoomed in image is different on different screen sizes, so it moves around, And 
+              thus, what we are trying to highlight isn't where we think it is. 
+            </li>
+            <li>It will be a lot easier to get a single example of pan and zoom to work
+              for a single scrollytelling story than to generalize it for anyone to be
+              able to zoom in on any image. 
+            </li>
+          </ul>
+        </p>
+      </div>
+
+      <section id="outro"></section>
+    </main>
+
+    <!-- <div class='debug'></div> -->
+    <script src="https://unpkg.com/intersection-observer@0.5.1/intersection-observer.js"></script>
+    <script src="https://unpkg.com/scrollama"></script>
+    <script>
+      var main = document.querySelector("main");
+      var scrolly = main.querySelector("#scrollytelling-container");
+      var sticky = scrolly.querySelector(".sticky-image");
+      var article = scrolly.querySelector("article");
+      var steps = article.querySelectorAll(".step");
+
+      // initialize the scrollama
+      var scroller = scrollama();
+
+      // scrollama event handlers
+      function handleStepEnter(response) {
+        // response = { element, direction, index }
+        var el = response.element;
+
+        // remove is-active from all steps
+        // then add is-active to this step
+        steps.forEach((step) => step.classList.remove("is-active"));
+        el.classList.add("is-active");
+        console.log("Step entered", el.dataset.step);
+
+        // On each step, zoom to the requested distance
+        //sticky.style.transform = `scale(${el.dataset.zoomFactor})`;
+        zoomToPoint(
+          el.dataset.zoomXPct || 0, // if not specified, default to 0
+          el.dataset.zoomYPct || 0,
+          el.dataset.zoomFactor || 1 // if not specified, no zoom
+        );
+
+        if (el.dataset.zoomFactor > 1) {
+          document.querySelector(".circle").style.display = "block";
+        } else {
+          document.querySelector(".circle").style.display = "none";
+        }
+      }
+
+      function zoomToPoint(xPercent, yPercent, scale) {
+        console.log("zoomToPoint X, Y, Scale =" + xPercent, yPercent, scale);
+
+        sticky.style.translateOrigin = `translate(${xPercent}%, ${yPercent}%)`
+        sticky.style.transform = `scale(${scale}) translate(${xPercent}%, ${yPercent}%)`;
+      }
+
+      function init() {
+        // 2. setup the scroller passing options
+        // 		this will also initialize trigger observations
+        // 3. bind scrollama event handlers (this can be chained like below)
+        scroller
+          .setup({
+            step: "#scrollytelling-container article .step", // identify where the steps are in HTML
+            offset: 0.8, // trigger when step happens, which % of the way down the page, between 0 and 1
+            debug: false, // show trigger offset and borders or not
+          })
+          .onStepEnter(handleStepEnter);
+
+        // setup resize event
+        window.addEventListener("resize", scroller.resize);
+      }
+
+      // kick things off
+      init();
+    </script>
+  </body>
+</html>
